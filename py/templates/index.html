@@ -5,6 +5,8 @@
     <title>Title</title>
 </head>
 <body>
-  <img src="{{ user_image }}" alt="User Image">
+    {% for imageList in imageList %}
+    <img src = "{{ url_for('static', filename=imageList)}}">
+    {% endfor %}
 </body>
 </html>
