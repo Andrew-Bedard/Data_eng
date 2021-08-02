@@ -1,3 +1,8 @@
+"""
+Flask webapp to display banners
+"""
+
+
 from flask import Flask, render_template
 import os
 
@@ -17,5 +22,4 @@ def show_index():
 
 if __name__ == "__main__":
     app.run()
-
 
