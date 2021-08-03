@@ -2,7 +2,7 @@
 Flask webapp to display banners
 """
 import flask
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 import os
 from banner_logic import *
@@ -14,15 +14,10 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = BANNER_FOLDER
 app.secret_key = "purplemonkeydishwasher"
 
-#thing = [494, 439, 190, 261, 116, 275, 452]
-# thing = [str(i) for i in thing]
-
 clicks_df, conv_df, imp_df = load_frames("D:\\Projects\\Data_eng\\py\\data\\csv\\csv\\")
 conv_click_df = pd.merge(conv_df, clicks_df, how='outer', on='click_id')
 
-# Landing page
-#@app.route("/")
-@app.route("/campaigns/<campaign_id>")
+@app.route("/campaigns/<campaign_id>/")
 def show_index(campaign_id):
 
     # Get user ip_address for creating session identifier to prevent same banner being served twice
@@ -35,7 +30,7 @@ def show_index(campaign_id):
             banner_list = get_banners(imp_df, conv_click_df, campaign_id)
 
     else:
-        session['ip'] = flask.request.remote_addr
+        session['ip'] = request.remote_addr
         banner_list = get_banners(imp_df, conv_click_df, campaign_id)
 
     session['prev_banners'] = banner_list  # save session data on banners already shown
@@ -47,9 +42,6 @@ def show_index(campaign_id):
     random.shuffle(imageList)
     return render_template("index.html", imageList=imageList)
 
-# @app.route("/get_my_ip", methods=["GET"])
-# def get_my_ip():
-#     return jsonify({'ip': request.remote_addr}), 200
 
 if __name__ == "__main__":
     app.run()
