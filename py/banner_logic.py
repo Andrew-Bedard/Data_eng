@@ -32,12 +32,28 @@ def load_frames(dat_path):
     return clicks, conv, imp
 
 
-def get_banners(imp_df, conv_click_df, camp_id):
+def get_banners(imp_df, conv_click_df, camp_id, banner_blacklist=None):
 
+    """
+
+    :param banner_blacklist:
+    :param imp_df:
+    :param conv_click_df:
+    :param camp_id:
+    :return:
+    """
+
+    if banner_blacklist is None:
+        banner_blacklist = []
     if not type(camp_id) == int:
         camp_id = int(camp_id)
 
     camp_frame = conv_click_df[conv_click_df['campaign_id'] == camp_id]
+
+    # TODO: this logic is a little silly, figure out a better way of filtering out 'black list' banners
+    camp_frame = camp_frame[~camp_frame['banner_id'].isin(banner_blacklist)]
+    imp_frame = imp_df[~imp_df['banner_id'].isin(banner_blacklist)]
+
 
     if len(camp_frame[~camp_frame['conversion_id'].isna()]['banner_id'].unique()) >= 10:
         # If >= 10, get list of top 10 by revenue
@@ -70,10 +86,12 @@ def get_banners(imp_df, conv_click_df, camp_id):
         dummy_list = list(dummy.sort_values(axis=0, ascending=False).index)
 
         if len(dummy_list) < 5:
-            dummy_series = imp_df[(imp_df['campaign_id'] == camp_id) & (~imp_df['banner_id'].isin(dummy_list))]['banner_id']
+            dummy_series = imp_frame[(imp_df['campaign_id'] == camp_id) & (~imp_frame['banner_id'].isin(dummy_list))]['banner_id']
             dummy_list.append(list(dummy_series.sample(5-len(dummy_list)).values))
 
         return list(pd.core.common.flatten(dummy_list))
+
+
 
 
 # dat_path = "D:\\Projects\\Data_eng\\py\\data\\csv\\csv\\"
