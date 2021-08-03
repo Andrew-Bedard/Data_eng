@@ -5,12 +5,61 @@ Collection of functions for logic on which banners to display
 
 import pandas as pd
 from datetime import datetime as dt
+import os
+
+def dat_check(dat_path, log_path):
+
+    import collections
+
+    """
+    Simple data sanity checks (duplicates)
+
+    :param dat_path: STR, path to bottom level csv directory
+    :return:
+    """
+
+    file_list = []
+    ext_list = ['.csv']  # hard coded, for now
+
+    for path, subdirs, files in os.walk(dat_path):
+        for name in files:
+            file_list.append(name)
+
+    # Remove any files that may not have an expected extension associated with them
+    file_list = [file for file in file_list if file[-4:] in ext_list]
+
+    # Check file_list for duplicates
+    dupe_list = [item for item, count in collections.Counter(file_list).items() if count > 1]
+
+    # If duplicates, write to log file
+    if len(dupe_list) > 0:
+        with open(log_path, 'a') as log_file:
+            log_file.write(f'WARNING: Duplicate file entries: {dupe_list}, {dt.now()}, extension of newest files '
+                           f'modified with ~ to prevent conflicts. \n')
+
+        # Change extension of older files to mask them from loading function
+
+        for file in dupe_list:
+            full_dupe_path = []
+            for path, subdirs, files in os.walk(dat_path):
+                for name in files:
+                    if name == file:
+                        full_dupe_path.append(os.path.join(path, name))
+                        # Remove any files that may not have an expected extension associated with them
+
+                        file_age = [os.stat(file).st_mtime for file in full_dupe_path]
+                        min_index = file_age.index(min(file_age))
+
+                        [os.rename(i, i + '_DUPE') for i in full_dupe_path if full_dupe_path.index(i) != min_index]
+
+    return
 
 def load_frames(dat_path):
 
     """
+    Tidy load of clicks, conversions and impression dataframes. Dataframes are selected base don time
 
-    :param dat_path:
+    :param dat_path: STR, path to bottom level csv directory
     :return:
     """
 
@@ -35,11 +84,12 @@ def load_frames(dat_path):
 def get_banners(imp_df, conv_click_df, camp_id, banner_blacklist=None):
 
     """
+    Get banners based on impressions, conversions and clicks for specific campaign
 
-    :param banner_blacklist:
-    :param imp_df:
-    :param conv_click_df:
-    :param camp_id:
+    :param imp_df: DATAFRAME, impressions dataframe
+    :param conv_click_df: DATAFRAME, outer join of conversion and clicks dataframe joined on click_id
+    :param camp_id: INT, campaign id number
+    :param banner_blacklist: LIST of INT, list of banner ids that are removed from pool of possible banners to be shown
     :return:
     """
 

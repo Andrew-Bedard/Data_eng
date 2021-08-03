@@ -14,7 +14,15 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = BANNER_FOLDER
 app.secret_key = "purplemonkeydishwasher"
 
-clicks_df, conv_df, imp_df = load_frames("D:\\Projects\\Data_eng\\py\\data\\csv\\csv\\")
+csv_path = os.getcwd() + "/data/csv/csv/"
+
+# Data quality check
+dat_check(csv_path, os.getcwd() + 'log.txt')
+
+# dataframes pre-loaded for performance
+clicks_df, conv_df, imp_df = load_frames(csv_path)
+
+# dataframe pre-merged for performance
 conv_click_df = pd.merge(conv_df, clicks_df, how='outer', on='click_id')
 
 @app.route("/campaigns/<campaign_id>/")
@@ -39,7 +47,7 @@ def show_index(campaign_id):
     imageList = os.listdir('static/banner_images/images')
     imageList = ['banner_images/images/' + image for image in imageList]
     imageList = [image for image in imageList if image[-7:-4] in banner_list]
-    random.shuffle(imageList)
+    random.shuffle(imageList) # Randomly shuffle imageList order
     return render_template("index.html", imageList=imageList)
 
 
